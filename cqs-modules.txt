@@ -107,7 +107,7 @@ Then answer the parts of question 1 below.
 
         does the resulting code typecheck?  Please answer yes or no.
 
-            > ...your answer here...
+            > yes
 
     (b) Assume the structure binding in part (a) does typecheck, i.e., we now
         have a structure identifier named "Env" through which we can access
@@ -118,7 +118,7 @@ Then answer the parts of question 1 below.
             fun extendEnv (names, vals, rho) =
               ListPair.foldrEq Env.bindVar rho (names, vals)
 
-             >
+             > yes
 
     (c) With the same assumption from (b), does the signature expose enough 
         information for us to write the following function?  Please answer 
@@ -127,7 +127,7 @@ Then answer the parts of question 1 below.
             fun isBound (name, rho) = (Env.lookup (name,rho)) 
                                       handle Env.NotFound _ => false
 
-             >
+             > no, b/c the NotFound exception is not declared in the Env sig.
 
 
     (d) In part (b) and/or part (c), it is not possible to write the
@@ -135,9 +135,16 @@ Then answer the parts of question 1 below.
         Please copy, paste, and edit your new version here:
 
 
+        signature ENV = sig
+          type name = string
+          type 'a env
+          val emptyEnv : 'a env
+          val lookup   : name * 'a env -> 'a
+          val bindVar  : name * 'a * 'a env -> 'a env
+          exception NotFound
+        end
 
-
-
+        
 
     (e) Suppose I change the `ENV` signature to make the `name` type
         abstract, so the code reads
@@ -153,7 +160,10 @@ Then answer the parts of question 1 below.
 
         The new structure `Env'`, sealed with signature `ENV'`, is useless.
         Please explain *why* it is useless:
-
+        
+         > It's useless b/c 'ENV'.name' is too abstract. In other words,
+         > it obscures the identity of the type name, when it should only
+         > obscure the identity of type 'a env.
 
 
 
@@ -195,10 +205,13 @@ For question 2, read about functors in section 23.1 in Harper.
         Using this information, complete the definition of signature `HASHABLE`
         here:
         
-            signature HASHABLE = sig
-              ... fill in declarations here ...
-              ... only info about keys; no operations on tables...
-            end
+            signature HASHABLE = 
+              sig
+                type t
+                val hash : t -> int
+                val eq : t * t -> bool
+              end
+
 
 
     (b) Suppose you have a structure `IntHash` that matches signature
@@ -214,7 +227,7 @@ For question 2, read about functors in section 23.1 in Harper.
         The ML compiler will reject this application of DictFun. Say one
         *specific* thing the compiler would complain about:
 
-            > 
+            >  
             
 
     *You now understand functors well enough to use them in the second and last
