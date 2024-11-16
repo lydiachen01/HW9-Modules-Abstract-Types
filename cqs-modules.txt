@@ -221,13 +221,14 @@ For question 2, read about functors in section 23.1 in Harper.
         Now suppose you apply functor `DictFun`, from Harper's
         chapter, to structure `IntHash`.  This scenario is like the 
         examples on the bottom of page 184; I'm suggesting you try
-        
+
             structure HIntDict = DictFun (structure K = IntHash).
 
         The ML compiler will reject this application of DictFun. Say one
         *specific* thing the compiler would complain about:
 
-            >  
+            >  The compiler would complain that structure K is not of signature
+            >  ORDERED.
             
 
     *You now understand functors well enough to use them in the second and last
@@ -288,12 +289,14 @@ Now answer the following question about short division.
         The first step is
 
               02 divided by 7  ==  0 remainder 2
-              29 divided by 7  ==  ...
+              29 divided by 7  ==  4 remainder 1
+              11 divided by 7  ==  1 remainder 4
+              48 divided by 7  ==  6 remainder 6
 
         There are four steps in total.  Edit the text above to state
         the dividend, divisor, quotient, and remainder at each step.
         Here, write the final four-digit quotient and the one-digit
-        remainder:
+        remainder: 0416 remainder 6 
            
     *You are now ready to implement short division on natural numbers
     (for exercise 1).*
@@ -317,18 +320,20 @@ about this, then answer the next question.
         Mastering Multiprecision Arithmetic handout shows the form, so please
         just fill in the right-hand sides here: 
 
-              q0 =           r0 = 
-              q1 =           r1 = 
-              q2 =           r2 = 
-              q3 =           r3 = 
+              q0 = 6          r0 = 1
+              q1 = 3          r1 = 0
+              q2 = 1          r2 = 1
+              q3 = 0          r3 = 1
 
-        Now write the converted numeral here: 
+        Now write the converted numeral here: 1101
 
     (b) Using repeated division by 8, convert decimal 25 to octal 31.
         Follow the same model: at each step, give the intermediate
         quotient and remainder, and then form the final quotient by
         reading off the remainders.
 
+              q0 = 3          r0 = 1
+              q1 = 0          r1 = 3
 
     *You are now ready to implement the `decimal` operation on natural
     numbers (for exercise 1).  This will also enable you to implement

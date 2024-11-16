@@ -122,7 +122,14 @@ structure GNatural : NATURAL = struct
   *  compare (n1, n2) == GREATER, when n1 > n2
   *
   *)
-  fun compare (x, y) = raise LeftAsExercise
+  fun compare (x, y) =
+    (case (x, y) of
+          (ZERO, ZERO) => EQUAL
+        | (ZERO, _) => LESS
+        | (_, ZERO) => GREATER
+        | (TIMESBASEPLUS (n1, d1), TIMESBASEPLUS (n2, d2)) => 
+            compare (n1 , n2))
+
 
   (* decimal n returns a list giving the natural decimal
      representation of n, most significant digit first.
