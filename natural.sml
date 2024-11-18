@@ -113,7 +113,19 @@ structure GNatural : NATURAL = struct
      If d <= 0 or d > base (where "base" is the hidden base selected to
      implement natural numbers), sdiv (n, d) raises BadDivisor.
   *)
-  fun x sdiv d = raise LeftAsExercise
+  fun _ sdiv 0 = raise BadDivisor
+    | ZERO sdiv _ = { quotient = ZERO, remainder = 0 }
+    | x sdiv 1 = { quotient = x, remainder = 0 }
+    | (TIMESBASEPLUS (m, v)) sdiv d =
+        if d < 0 orelse d > base then raise BadDivisor
+        else
+          let
+            val { quotient = q, remainder = r } = m sdiv d
+            val q' = timesBasePlus (q, (r * base + v) div d)
+            val r' = (r * base + v) mod d
+          in
+            { quotient = q', remainder = r' }
+          end
 
   (* Compare two natural numbers, following these hand-wavy laws:
   *
@@ -122,14 +134,10 @@ structure GNatural : NATURAL = struct
   *  compare (n1, n2) == GREATER, when n1 > n2
   *
   *)
-  fun compare (x, y) =
-    (case (x, y) of
-          (ZERO, ZERO) => EQUAL
-        | (ZERO, _) => LESS
-        | (_, ZERO) => GREATER
-        | (TIMESBASEPLUS (n1, d1), TIMESBASEPLUS (n2, d2)) => 
-            compare (n1 , n2))
-
+  fun compare (ZERO, ZERO) = EQUAL
+    | compare (ZERO, _) = LESS
+    | compare (_, ZERO) = GREATER
+    | compare (x, y) = compare(x /-/ ofInt 1, y /-/ ofInt 1)
 
   (* decimal n returns a list giving the natural decimal
      representation of n, most significant digit first.
@@ -138,8 +146,20 @@ structure GNatural : NATURAL = struct
      It must never return an empty list, and when it returns a 
      list of two or more digits, the first digit must not be zero.
   *)
-  fun decimal x = raise LeftAsExercise
 
+  (* append n to list and recurse on d *)
+  fun decimal n =
+      let
+        fun dec ZERO = [0]
+          | dec n =
+              let
+                  val {quotient = q, remainder = r} = n sdiv 10
+              in
+                  if q = ZERO then [r] else r :: dec q             
+              end
+      in
+          List.rev(dec n)
+      end
 end
 
 structure Natural :> NATURAL = GNatural
