@@ -24,37 +24,77 @@ struct
     datatype sign = POS 
                   | NEG
     datatype bigint = ZERO
-                    | SIGN of sign * N.nat
+                    | BIGINT of sign * N.nat
 
     exception BadDivision
     exception LeftAsExercise
+      
+    val /+/ = N./+/
+    val /-/ = N./-/
+    val /*/ = N./*/
+    infix 6 /+/ /-/ 
+    infix 7 /*/
 
-    fun ofInt 0 = ZERO
-      | ofInt x = 
-        let
-            val cond = N.compare(x, 0)
-        in
-            if cond = GREATER then SIGN (POS, x)
-            else SIGN (NEG, ~x)
-        end
+    infix 6 <+> <-> 
+    infix 7 <*> sdiv
+
+    fun ofInt x = 
+        case N.compare(N.ofInt x, N.ofInt 0) of
+            GREATER => BIGINT(POS, N.ofInt x)
+            | LESS => 
+              let 
+                val addOne = x + 1
+                val negate = ~addOne
+                val toNat = N.ofInt negate
+                val newNat = N./+/ (toNat, N.ofInt 1)
+              in 
+                BIGINT (NEG, newNat)
+              end
+            | EQUAL => ZERO
     
-    fun negated x = ZERO <-> x
+    fun negated ZERO = ZERO
+      | negated (BIGINT (sign, m)) = 
+        (case sign of
+            POS => BIGINT(NEG, m)
+          | NEG => BIGINT(POS, m))
+
+    fun ZERO <+> b = b
+      | a <+> ZERO = a
+      | (BIGINT(s1, n)) <+> (BIGINT(s2, m)) = 
+          if s1 = s2 then BIGINT(s1, n /+/ m)
+          else case N.compare(n, m) of
+                    GREATER   => BIGINT(s1, n /-/ m)
+                  | LESS      => BIGINT(s2, m /-/ n)
+                  | _         => ZERO
+
+    fun ZERO <-> b = negated b
+      | a <-> ZERO = a
+      | (BIGINT(s1, n)) <-> (BIGINT(s2, m)) = 
+          let
+            val s3 = if (s2 = POS) then NEG else POS
+          in
+            (BIGINT (s1, n)) <+> (BIGINT(s3, m))
+          end
+
+    fun ZERO <*> _ = ZERO
+      | _ <*> ZERO = ZERO
+      | (BIGINT(s1, n)) <*> (BIGINT(s2, m)) = 
+          if s1 = s2 then BIGINT(POS, n /*/ m)
+          else BIGINT(NEG, n /*/ m)
     
-    fun n <+> m     = N./+/ (n, m)
-    fun n <-> m     = N./-/ (n, m)
-    fun n <*> m     = N./*/ (n, m)
+    fun compare (ZERO, ZERO) = EQUAL
+    | compare (ZERO, BIGINT(POS, _)) = LESS
+    | compare (ZERO, BIGINT(NEG, _)) = GREATER
+    | compare (BIGINT(POS, _), ZERO) = GREATER
+    | compare (BIGINT(NEG, _), ZERO) = LESS
+    | compare (BIGINT(s1, n), BIGINT(s2, m)) = 
+          case (s1, s2) of 
+            (POS, POS) => N.compare (n, m)
+          | (NEG, NEG) => N.compare (m, n)
+          | (POS, NEG) => GREATER
+          | (NEG, POS) => LESS
 
-    fun compare (bigint x, bigint y) =
-        (case (bigint x, bigint y) of
-                (ZERO, ZERO)  => EQUAL
-            |   (ZERO, _)     => LESS
-            |   (_, ZERO)     => GREATER
-            |   (a, b)        => 
-                    if a /</ b then LESS
-                    else if a />/ b then GREATER
-                    else EQUAL)
 
-        
     (* Contract for "Short division" sdiv:
 
     sdiv (n, d) nonnegative bigint n by nonnegative machine integer d 
@@ -69,29 +109,15 @@ struct
 
     Given a negative n or d <= 0, sdiv (n, d) raises BadDivision.
     *)
-    val sdiv    = raise LeftAsExercise 
 
-
-  fun _ sdiv 0 = raise BadDivisor
-    | ZERO sdiv _ = { quotient = ZERO, remainder = 0 }
-    | bigint x sdiv 1 = { quotient = bigint x, remainder = 0 }
-    | N.timesBasePlus(bigint m, v) sdiv d =
-        if d < 0 orelse d > base then raise BadDivisor
-        else
-          let
-            val { quotient = q, remainder = r } = bigint m sdiv d
-            val q' = N.timesBasePlus (bigint q, (bigint r * base + v) div d)
-            val r' = (bigint r * base + v) mod d
-          in
-            { quotient = q', remainder = r' }
+    fun _ sdiv 0 = raise BadDivision
+      | ZERO sdiv _ = { quotient = ZERO, remainder = 0 }
+      | (BIGINT (s1, n)) sdiv d = 
+          if (s1 = NEG) orelse (d < 0) then raise BadDivision
+          else 
+              let val { quotient = q, remainder = r} =  N.sdiv (n,d)
+              in { quotient = BIGINT (s1, q), remainder = r }
           end
-
-
-
-
-
-
-
 
 
     (* toString n returns a string giving the natural 
@@ -101,6 +127,14 @@ struct
     And when toString returns a string containing two or more digits,
     the first digit must not be zero.
     *)
-    val toString = raise LeftAsExercise 
 
+    fun toString ZERO = "0"
+      | toString (BIGINT(s, m)) = 
+          let
+            val nStr = foldr (fn (x, acc) => Int.toString x ^ acc) "" 
+              (N.decimal m)
+            val addSign = if s = NEG then "-" ^ nStr else nStr
+          in
+            addSign
+          end
 end

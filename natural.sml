@@ -137,7 +137,13 @@ structure GNatural : NATURAL = struct
   fun compare (ZERO, ZERO) = EQUAL
     | compare (ZERO, _) = LESS
     | compare (_, ZERO) = GREATER
-    | compare (x, y) = compare(x /-/ ofInt 1, y /-/ ofInt 1)
+    | compare (TIMESBASEPLUS (m1, d1), TIMESBASEPLUS (m2, d2)) =
+        case compare (m1, m2) of
+            EQUAL => if d1 < d2 then LESS
+                     else if d1 > d2 then GREATER
+                     else EQUAL
+          | LESS => LESS
+          | GREATER => GREATER
 
   (* decimal n returns a list giving the natural decimal
      representation of n, most significant digit first.
